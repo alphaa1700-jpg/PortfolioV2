@@ -1,4 +1,4 @@
 #!/bin/bash 
-cd /home/ec2-user/portfolio
+cd /home/ubuntu/Portfolio2
 npm install
 chmod +x scripts/install.sh
