@@ -22,4 +22,4 @@ artifacts:
   files:
     - '**/*'
     - appspec.yml
-    - application-start-hook.sh
+    - scripts/application-start-hook.sh
