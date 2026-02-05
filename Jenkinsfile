@@ -2,35 +2,68 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "jenkins-demo-app"
-        CONTAINER = "jenkins-demo-container"
+        IMAGE_NAME = "my-node-app"
+        CONTAINER_NAME = "portfolio-container"
     }
 
     stages {
 
-        stage('Clone') {
+        stage('Clone Code') {
             steps {
                 checkout scm
             }
         }
 
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'CI=true npm test -- --passWithNoTests'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Login to DockerHub') {
             steps {
-                sh 'docker stop $CONTAINER || true'
-                sh 'docker rm $CONTAINER || true'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
             }
         }
 
-        stage('Run New Container') {
+        stage('Push Image to DockerHub') {
             steps {
-                sh 'docker run -d -p 3000:3000 --name $CONTAINER $IMAGE'
+                sh 'docker tag $IMAGE_NAME $DOCKER_USER/$IMAGE_NAME'
+                sh 'docker push $DOCKER_USER/$IMAGE_NAME'
             }
+        }
+
+        stage('Deploy Container on VM') {
+            steps {
+                sh 'docker stop $CONTAINER_NAME || true'
+                sh 'docker rm $CONTAINER_NAME || true'
+                sh 'docker pull $DOCKER_USER/$IMAGE_NAME'
+                sh 'docker run -d -p 80:80 --name $CONTAINER_NAME $DOCKER_USER/$IMAGE_NAME'
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
         }
     }
 }
