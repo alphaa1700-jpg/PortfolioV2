@@ -33,28 +33,26 @@ pipeline {
         }
 
         stage('Push & Deploy') {
-    steps {
-        withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-creds',
-            usernameVariable: 'DOCKER_USER',
-            passwordVariable: 'DOCKER_PASS'
-        )]) {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
 
-            sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
 
-            // Push image
-            sh 'docker tag $IMAGE_NAME $DOCKER_USER/$IMAGE_NAME'
-            sh 'docker push $DOCKER_USER/$IMAGE_NAME'
+                    sh 'docker tag $IMAGE_NAME $DOCKER_USER/$IMAGE_NAME'
+                    sh 'docker push $DOCKER_USER/$IMAGE_NAME'
 
-            // Deploy container on VM
-            sh 'docker stop $CONTAINER_NAME || true'
-            sh 'docker rm $CONTAINER_NAME || true'
-            sh 'docker pull $DOCKER_USER/$IMAGE_NAME'
-            sh 'docker run -d -p 80:80 --name $CONTAINER_NAME $DOCKER_USER/$IMAGE_NAME'
+                    sh 'docker stop $CONTAINER_NAME || true'
+                    sh 'docker rm $CONTAINER_NAME || true'
+                    sh 'docker pull $DOCKER_USER/$IMAGE_NAME'
+                    sh 'docker run -d -p 80:80 --name $CONTAINER_NAME $DOCKER_USER/$IMAGE_NAME'
+                }
+            }
         }
     }
-}
-
 
     post {
         always {
