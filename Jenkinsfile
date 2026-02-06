@@ -48,7 +48,7 @@ pipeline {
                     sh 'docker stop $CONTAINER_NAME || true'
                     sh 'docker rm $CONTAINER_NAME || true'
                     sh 'docker pull $DOCKER_USER/$IMAGE_NAME'
-                    sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $DOCKER_USER/$IMAGE_NAME'
+                    sh 'docker run -d -p 80:80 --name $CONTAINER_NAME $DOCKER_USER/$IMAGE_NAME'
                 }
             }
         }
